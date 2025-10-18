@@ -188,7 +188,6 @@ func Run(cfg *config.Config) error {
 			if err != nil {
 				log.Fatalln(err)
 			}
-
 		}
 
 		shutdownCtxCancel()
