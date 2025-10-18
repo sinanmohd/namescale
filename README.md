@@ -15,7 +15,9 @@ Zeroconf [Wildcard](https://en.wikipedia.org/wiki/Wildcard_DNS_record) [MagicDNS
 > [!NOTE]
 > [Example setup](https://github.com/sinanmohd/nixos/commit/246840e19b230f4cd22b5f40ecf94cc28255b887) on NixOS with ACLs
 
-Add namescale to your NixOS flake
+<details>
+
+<summary>Add namescale to your NixOS flake</summary>
 
 ```nix
 {
@@ -44,7 +46,10 @@ Add namescale to your NixOS flake
 }
 ```
 
-Now set up namescale in your `configuration.nix`, here host is the tailscale ip
+</details>
+
+
+Set up namescale in your `configuration.nix`, here host is the tailscale ip
 address assigned to your node running namescale.
 
 ```nix
@@ -60,9 +65,9 @@ address assigned to your node running namescale.
 }
 ```
 
-Using Split DNS Configure your tailnet to route all DNS requests to your base
-domain to Namescale , on Tailscale you can use the Web GUI for this. if you're
-using Headscale you can do the following in your `configuration.nix`.
+Using Split DNS make your tailnet to route all DNS requests to your base domain
+to Namescale , on Tailscale you can use the Web GUI for this. if you're using
+Headscale you can do the following in your `configuration.nix`.
 
 ```nix
 { ... }: {
