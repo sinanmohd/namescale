@@ -4,15 +4,23 @@
 
 [![Badge Matrix]](https://matrix.to/#/#chat:sinanmohd.com)
 
-Zeroconf [Wildcard](https://en.wikipedia.org/wiki/Wildcard_DNS_record) [MagicDNS](https://tailscale.com/kb/1081/magicdns) for [Tailnet](https://tailscale.com/kb/1136/tailnet)
+Zeroconf [Wildcard](https://en.wikipedia.org/wiki/Wildcard_DNS_record) [MagicDNS](https://tailscale.com/kb/1081/magicdns) for [Tailscale](https://tailscale.com/kb/1136/tailnet)
 
 </div>
+
+## Table of Contents
+
+1. [Deployment](#deployment)
+    - [NixOS](#nixos)
+    - [GNU/Linux Distros](#gnulinux-distros)
+    - [Kubernets & Docker](#kubernets--docker)
+2. [Development](#development)
 
 ## Deployment
 
 ### NixOS
 
-> [!NOTE]
+> [!TIP]
 > [Example setup](https://github.com/sinanmohd/nixos/commit/246840e19b230f4cd22b5f40ecf94cc28255b887) on NixOS with ACLs
 
 <details>
@@ -91,7 +99,7 @@ Run Namescale, here host is the tailscale ip address assigned to your node
 running namescale
 
 ```sh
-./namescale -host "100.64.0.6" -base-domain "bane.ts.net"
+sudo ./namescale -host "100.64.0.6" -base-domain "bane.ts.net"
 ```
 
 Using Split DNS make your tailnet to routes all DNS requests to your base domain
@@ -109,9 +117,21 @@ dns:
 
 ### Kubernets & Docker
 
-TODO: i don't use tailnet on docker or k8s, but it should be straight forward
-to set up namescale using docker compose or helm charts. if you do, please
-open a pr to update the readme
+> [!NOTE]
+> I don't use Tailnet on K8S or Docker, but it should be moderately okay to
+> set up namescale using Docker Compose or Helm Charts following the
+> [GNU/Linux Distros](#gnulinux-distros) section and
+> [Tailscale Containers and virtualization](https://tailscale.com/kb/1358/containers-and-virtualization)
+> documentation. if you do, please open a pr to update the readme. you can get
+> the image from `docker.io/sinanmohd/namescale`
+
+Build and run the container image
+
+```sh
+nix build .#container
+docker image load < result
+docker run sinanmohd/namescale:git
+```
 
 ## Development
 
