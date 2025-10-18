@@ -79,6 +79,12 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 			return
 		}
 
+		// either MagicDNS is disabled, or non-existent host
+		if req.Question[i].Name == hostFqdn {
+			w.WriteMsg(req.SetRcode(req, dns.RcodeNameError))
+			return
+		}
+
 		qustionNames = append(qustionNames, req.Question[i].Name)
 		req.Question[i].Name = hostFqdn
 	}
