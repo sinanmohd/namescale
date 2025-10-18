@@ -27,7 +27,7 @@ func New() (*Config, error) {
 
 	config := Config{
 		Host:       "[::]",
-		Port:       8008,
+		Port:       53,
 		BaseDomain: "ts.net.",
 	}
 
