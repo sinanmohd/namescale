@@ -17,6 +17,7 @@ import (
 )
 
 const RESOLVECONF_PATH = "/etc/resolv.conf"
+const HEADSCALE_NS = "100.100.100.100"
 
 type Handler struct {
 	dnsConfig      *dns.ClientConfig
@@ -37,17 +38,44 @@ func hostFqdnFromWildQustion(name, baseFqdn string) (string, error) {
 	return fmt.Sprintf("%s.%s", ss[len(ss)-2], baseFqdn), nil
 }
 
+func (handler *Handler) ServeFromRootNS(client *dns.Client, w dns.ResponseWriter, req *dns.Msg) {
+	var resp *dns.Msg
+	var err error
+
+	for _, upstream := range handler.dnsConfig.Servers {
+		resp, _, err = client.Exchange(req, net.JoinHostPort(upstream, handler.dnsConfig.Port))
+		if err == nil {
+			break
+		}
+
+		slog.Error("Root NS resolving", "err", err)
+		w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
+	}
+
+	w.WriteMsg(resp)
+}
+
 func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	if req.Opcode != dns.OpcodeQuery {
 		slog.Error("Ignoring non-query request", "name", req.Question[0].Name, "opcode", req.Opcode)
+		w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
 		return
 	}
 
+	client := new(dns.Client)
 	var qustionNames []string
 	for i := range req.Question {
+		// pass the base domain to root ns
+		if req.Question[i].Name == handler.baseDomainFqdn {
+			handler.ServeFromRootNS(client, w, req)
+			return
+		}
+
+		// handle the rest (wild card)
 		hostFqdn, err := hostFqdnFromWildQustion(req.Question[i].Name, handler.baseDomainFqdn)
 		if err != nil {
 			slog.Error("Getting hostFqdn", "err", err)
+			w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
 			return
 		}
 
@@ -55,19 +83,10 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 		req.Question[i].Name = hostFqdn
 	}
 
-	var resp *dns.Msg
-	var err error
-	client := new(dns.Client)
-	for _, upstream := range handler.dnsConfig.Servers {
-		resp, _, err = client.Exchange(req, net.JoinHostPort(upstream, handler.dnsConfig.Port))
-		if err == nil {
-			break
-		}
-
-		slog.Error("Upstream resolving", "err", err)
-	}
+	resp, _, err := client.Exchange(req, net.JoinHostPort(HEADSCALE_NS, handler.dnsConfig.Port))
 	if err != nil {
-		return
+		slog.Error("Headscale NS resolving", "err", err)
+		w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
 	}
 
 	qustionLen := len(qustionNames)
@@ -75,6 +94,7 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	answerLen := len(resp.Answer)
 	if qustionLen != respQustionLen || qustionLen != answerLen {
 		slog.Error("Unexpected dns msg length", "qustionLen", qustionLen, "answerLen", answerLen, "respQustionLen", respQustionLen)
+		w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
 		return
 	}
 	for i := range resp.Question {
