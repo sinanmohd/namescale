@@ -48,7 +48,6 @@ Zeroconf [Wildcard](https://en.wikipedia.org/wiki/Wildcard_DNS_record) [MagicDNS
 
 </details>
 
-
 Set up namescale in your `configuration.nix`, here host is the tailscale ip
 address assigned to your node running namescale.
 
@@ -65,7 +64,7 @@ address assigned to your node running namescale.
 }
 ```
 
-Using Split DNS make your tailnet to route all DNS requests to your base domain
+Using Split DNS make your tailnet to routes all DNS requests to your base domain
 to Namescale , on Tailscale you can use the Web GUI for this. if you're using
 Headscale you can do the following in your `configuration.nix`.
 
@@ -78,7 +77,37 @@ Headscale you can do the following in your `configuration.nix`.
 }
 ```
 
-### Docker & Kubernets
+### GNU/Linux Distros
+
+Make sure Tailscale is up and running on your node and build Namescale
+
+```sh
+git clone https://github.com/sinanmohd/namescale.git
+cd namescale
+go build ./cmd/namescale
+```
+
+Run Namescale, here host is the tailscale ip address assigned to your node
+running namescale
+
+```sh
+./namescale -host "100.64.0.6" -base-domain "bane.ts.net"
+```
+
+Using Split DNS make your tailnet to routes all DNS requests to your base domain
+to Namescale , on Tailscale you can use the Web GUI for this. if you're using
+Headscale you can do the following in your `headscale.yaml`.
+
+```yaml
+dns:
+  base_domain: bane.ts.net
+  nameservers:
+    split:
+      bane.ts.net:
+      - 100.64.0.6
+```
+
+### Kubernets & Docker
 
 TODO: i don't use tailnet on docker or k8s, but it should be straight forward
 to set up namescale using docker compose or helm charts. if you do, please
