@@ -45,6 +45,10 @@ func (handler *Handler) ServeFromRootNS(client *dns.Client, w dns.ResponseWriter
 	var err error
 
 	for _, upstream := range handler.dnsConfig.Servers {
+		if upstream == HEADSCALE_NS {
+			continue
+		}
+
 		resp, _, err = client.Exchange(req, net.JoinHostPort(upstream, handler.dnsConfig.Port))
 		if err == nil {
 			break
@@ -154,6 +158,7 @@ func listenAndServeAll(cfg *config.Config) ([]*dns.Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Reading %s: %s", RESOLVECONF_PATH, err)
 	}
+	handler.dnsConfig.Servers = append(handler.dnsConfig.Servers, "1.1.1.1", "8.8.8.8")
 
 	srv := listenAndServeTransport(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port), "tcp", &handler)
 	servers = append(servers, srv)
