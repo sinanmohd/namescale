@@ -1,0 +1,4 @@
+# nix build
+result
+# go build ./cmd/namescale
+namescale
