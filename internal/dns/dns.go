@@ -101,7 +101,15 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	respQustionLen := len(resp.Question)
 	answerLen := len(resp.Answer)
 	if qustionLen != respQustionLen || qustionLen != answerLen {
-		slog.Error("Unexpected dns msg length", "qustionLen", qustionLen, "answerLen", answerLen, "respQustionLen", respQustionLen)
+		slog.Error(
+			"Unexpected dns msg length",
+			"qustionLen",
+			qustionLen,
+			"answerLen",
+			answerLen,
+			"respQustionLen",
+			respQustionLen,
+		)
 		w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
 		return
 	}

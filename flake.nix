@@ -1,8 +1,15 @@
 {
-  inputs.nixpkgs.url = "github:NixOs/nixpkgs/nixos-unstable";
+  inputs = {
+    nixpkgs.url = "github:NixOs/nixpkgs/nixos-unstable";
+    pre-commit-hooks.url = "github:cachix/git-hooks.nix";
+  };
 
   outputs =
-    inputs@{ self, nixpkgs }:
+    inputs@{
+      self,
+      nixpkgs,
+      pre-commit-hooks,
+    }:
     let
       lib = nixpkgs.lib;
 
@@ -17,6 +24,29 @@
       forLinuxSystems = f: lib.genAttrs lib.platforms.linux (forSystem f);
     in
     {
+      checks = forAllSystems (
+        { system, pkgs }:
+        {
+          pre-commit-check = pre-commit-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = {
+              check-case-conflicts.enable = true;
+              nixfmt-rfc-style.enable = true;
+              check-added-large-files.enable = true;
+              check-executables-have-shebangs.enable = true;
+              check-merge-conflicts.enable = true;
+              check-symlinks.enable = true;
+              check-toml.enable = true;
+              detect-private-keys.enable = true;
+              trim-trailing-whitespace.enable = true;
+              end-of-file-fixer.enable = true;
+              shellcheck.enable = true;
+              golines.enable = true;
+            };
+          };
+        }
+      );
+
       packages =
         lib.recursiveUpdate
           (forAllSystems (

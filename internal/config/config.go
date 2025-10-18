@@ -33,7 +33,8 @@ func New() (*Config, error) {
 
 	_, err := os.Stat(configPath)
 	if err != nil {
-		if (configPath == defaultConfigPath && !errors.Is(err, os.ErrNotExist)) || configPath != defaultConfigPath {
+		if (configPath == defaultConfigPath && !errors.Is(err, os.ErrNotExist)) ||
+			configPath != defaultConfigPath {
 			slog.Error("Error reading config", "err", err)
 			return nil, err
 		}
@@ -49,7 +50,12 @@ func New() (*Config, error) {
 
 	flag.StringVar(&config.Host, "host", config.Host, "Bind host")
 	flag.UintVar(&config.Port, "port", config.Port, "Bind port")
-	flag.StringVar(&config.BaseDomain, "base-domain", config.BaseDomain, "Base domain (dns.base_domain in headscale)")
+	flag.StringVar(
+		&config.BaseDomain,
+		"base-domain",
+		config.BaseDomain,
+		"Base domain (dns.base_domain in headscale)",
+	)
 	flag.Parse()
 
 	config.BaseDomain = dns.Fqdn(config.BaseDomain)
