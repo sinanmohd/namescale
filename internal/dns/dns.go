@@ -16,8 +16,10 @@ import (
 	"sinanmohd.com/namescale/internal/config"
 )
 
-const RESOLVECONF_PATH = "/etc/resolv.conf"
-const HEADSCALE_NS = "100.100.100.100"
+const (
+	RESOLVECONF_PATH = "/etc/resolv.conf"
+	HEADSCALE_NS     = "100.100.100.100"
+)
 
 type Handler struct {
 	dnsConfig      *dns.ClientConfig
