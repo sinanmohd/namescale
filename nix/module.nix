@@ -39,7 +39,7 @@ in
 
   config = lib.mkIf cfg.enable {
     systemd.services.namescale = rec {
-      description = "Zeroconf Wildcard MagicDNS for Tailnet.";
+      description = "Zeroconf Wildcard DNS for Tailnet.";
 
       wantedBy = [ "multi-user.target" ];
       after = lib.optional config.services.tailscale.enable "tailscaled.service";

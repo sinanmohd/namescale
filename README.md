@@ -4,7 +4,7 @@
 
 [![Badge Matrix]](https://matrix.to/#/#chat:sinanmohd.com)
 
-Zeroconf [Wildcard](https://en.wikipedia.org/wiki/Wildcard_DNS_record) [MagicDNS](https://tailscale.com/kb/1081/magicdns) for [Tailscale](https://tailscale.com/kb/1136/tailnet)
+Zeroconf [Wildcard DNS](https://en.wikipedia.org/wiki/Wildcard_DNS_record) for [Tailscale](https://tailscale.com/kb/1136/tailnet)
 
 </div>
 
