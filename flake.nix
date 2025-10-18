@@ -2,7 +2,7 @@
   inputs.nixpkgs.url = "github:NixOs/nixpkgs/nixos-unstable";
 
   outputs =
-    { self, nixpkgs }:
+    inputs@{ self, nixpkgs }:
     let
       lib = nixpkgs.lib;
 
@@ -24,6 +24,11 @@
           default = self.packages.${system}.namescale;
         }
       );
+
+      nixosModules = {
+        namescale = import ./nix/module.nix inputs;
+        default = self.nixosModules.namescale;
+      };
 
       devShells = forAllSystems (
         { system, pkgs }:
