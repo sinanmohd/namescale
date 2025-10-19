@@ -4,7 +4,7 @@
 
 [![Badge Matrix]](https://matrix.to/#/#chat:sinanmohd.com)
 
-Zeroconf [Wildcard DNS](https://en.wikipedia.org/wiki/Wildcard_DNS_record) for [Tailscale](https://tailscale.com/kb/1136/tailnet)
+Namescale automatically registers Wildcard DNS names for devices in your Tailnet
 
 </div>
 
@@ -56,7 +56,7 @@ Zeroconf [Wildcard DNS](https://en.wikipedia.org/wiki/Wildcard_DNS_record) for [
 
 </details>
 
-Set up namescale in your `configuration.nix`, here host is the tailscale ip
+Set up namescale in your `configuration.nix`, here host is the tailnet ip
 address assigned to your node running namescale.
 
 ```nix
@@ -87,7 +87,7 @@ Headscale you can do the following in your `configuration.nix`.
 
 ### GNU/Linux Distros
 
-Make sure Tailscale is up and running on your node and build Namescale
+Make sure Tailnet is up and running on your node and build Namescale
 
 ```sh
 git clone https://github.com/sinanmohd/namescale.git
@@ -95,7 +95,7 @@ cd namescale
 go build ./cmd/namescale
 ```
 
-Run Namescale, here host is the tailscale ip address assigned to your node
+Run Namescale, here host is the tailnet ip address assigned to your node
 running namescale
 
 ```sh
