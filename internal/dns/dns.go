@@ -160,9 +160,10 @@ func listenAndServeAll(cfg *config.Config) ([]*dns.Server, error) {
 	}
 	handler.dnsConfig.Servers = append(handler.dnsConfig.Servers, cfg.BaseForwardFallback...)
 
-	srv := listenAndServeTransport(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port), "tcp", &handler)
+	addr := net.JoinHostPort(cfg.Host, fmt.Sprint(cfg.Port))
+	srv := listenAndServeTransport(addr, "tcp", &handler)
 	servers = append(servers, srv)
-	srv = listenAndServeTransport(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port), "udp", &handler)
+	srv = listenAndServeTransport(addr, "udp", &handler)
 	servers = append(servers, srv)
 	return servers, nil
 }

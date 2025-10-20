@@ -27,7 +27,7 @@ func New() (*Config, error) {
 	}
 
 	config := Config{
-		Host:                "[::]",
+		Host:                "::",
 		Port:                53,
 		BaseDomain:          "ts.net.",
 		BaseForwardFallback: []string{"1.1.1.1", "8.8.8.8"},
