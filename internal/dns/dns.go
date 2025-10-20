@@ -158,7 +158,7 @@ func listenAndServeAll(cfg *config.Config) ([]*dns.Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Reading %s: %s", RESOLVECONF_PATH, err)
 	}
-	handler.dnsConfig.Servers = append(handler.dnsConfig.Servers, "1.1.1.1", "8.8.8.8")
+	handler.dnsConfig.Servers = append(handler.dnsConfig.Servers, cfg.BaseForwardFallback...)
 
 	srv := listenAndServeTransport(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port), "tcp", &handler)
 	servers = append(servers, srv)

@@ -11,9 +11,10 @@ import (
 )
 
 type Config struct {
-	Host       string `toml:"host"`
-	Port       uint   `toml:"port"`
-	BaseDomain string `toml:"base_domain"`
+	Host                string   `toml:"host"`
+	Port                uint     `toml:"port"`
+	BaseDomain          string   `toml:"base_domain"`
+	BaseForwardFallback []string `toml:"base_forward_fallback"`
 }
 
 func New() (*Config, error) {
@@ -26,9 +27,10 @@ func New() (*Config, error) {
 	}
 
 	config := Config{
-		Host:       "[::]",
-		Port:       53,
-		BaseDomain: "ts.net.",
+		Host:                "[::]",
+		Port:                53,
+		BaseDomain:          "ts.net.",
+		BaseForwardFallback: []string{"1.1.1.1", "8.8.8.8"},
 	}
 
 	_, err := os.Stat(configPath)
