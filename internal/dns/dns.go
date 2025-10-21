@@ -51,14 +51,14 @@ func (handler *Handler) ServeFromRootNS(client *dns.Client, w dns.ResponseWriter
 
 		resp, _, err = client.Exchange(req, net.JoinHostPort(upstream, handler.dnsConfig.Port))
 		if err == nil {
-			break
+			w.WriteMsg(resp)
+			return
 		}
 
 		slog.Error("Root NS resolving", "err", err)
-		w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
 	}
 
-	w.WriteMsg(resp)
+	w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
 }
 
 func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
@@ -156,7 +156,10 @@ func listenAndServeAll(cfg *config.Config) ([]*dns.Server, error) {
 	var err error
 	handler.dnsConfig, err = dns.ClientConfigFromFile(RESOLVECONF_PATH)
 	if err != nil {
-		return nil, fmt.Errorf("Reading %s: %s", RESOLVECONF_PATH, err)
+		slog.Error("Reading resolveconf, using fallback", "err", err)
+		handler.dnsConfig = &dns.ClientConfig{
+			Port: "53",
+		}
 	}
 	handler.dnsConfig.Servers = append(handler.dnsConfig.Servers, cfg.BaseForwardFallback...)
 
