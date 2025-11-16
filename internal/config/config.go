@@ -58,13 +58,13 @@ func New() (*Config, error) {
 
 	flag.StringVar(
 		&config.Tsnet.CoordinationServerURL,
-		"tsnet-coordination-server-url",
+		"coordination-server",
 		config.Tsnet.CoordinationServerURL,
 		"Bind host",
 	)
 	flag.StringVar(
 		&config.Tsnet.AuthKey,
-		"tsnet-auth-key",
+		"auth-key",
 		config.Tsnet.AuthKey,
 		"Bind host",
 	)
