@@ -6,6 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"net"
+	"net/netip"
 	"os"
 	"os/signal"
 	"strings"
@@ -14,6 +15,8 @@ import (
 
 	"github.com/miekg/dns"
 	"sinanmohd.com/namescale/internal/config"
+	"sinanmohd.com/namescale/internal/ntsnet"
+	"tailscale.com/tsnet"
 )
 
 const (
@@ -22,8 +25,8 @@ const (
 )
 
 type Handler struct {
-	dnsConfig      *dns.ClientConfig
-	baseDomainFqdn string
+	dnsConfig *dns.ClientConfig
+	ntsnet    *ntsnet.Ntsnet
 }
 
 func hostFqdnFromWildQustion(name, baseFqdn string) (string, error) {
@@ -68,17 +71,24 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 		return
 	}
 
+	baseDomain, err := handler.ntsnet.BaseDomainGet(context.Background())
+	if err != nil {
+		slog.Error("Getting baseDomain", "err", err)
+		w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
+		return
+	}
+
 	client := new(dns.Client)
 	var qustionNames []string
 	for i := range req.Question {
 		// pass the base domain to root ns
-		if req.Question[i].Name == handler.baseDomainFqdn {
+		if req.Question[i].Name == baseDomain {
 			handler.ServeFromRootNS(client, w, req)
 			return
 		}
 
 		// handle the rest (wild card)
-		hostFqdn, err := hostFqdnFromWildQustion(req.Question[i].Name, handler.baseDomainFqdn)
+		hostFqdn, err := hostFqdnFromWildQustion(req.Question[i].Name, baseDomain)
 		if err != nil {
 			slog.Error("Getting hostFqdn", "err", err)
 			w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
@@ -128,29 +138,51 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	w.WriteMsg(resp)
 }
 
-func listenAndServeTransport(addr, transport string, handler *Handler) *dns.Server {
-	srv := dns.Server{
-		Net:       transport,
-		Addr:      addr,
-		ReusePort: true,
-		Handler:   handler,
+func Serve(tsnetServer *tsnet.Server, handler *Handler) ([]*dns.Server, error) {
+	ip4, ip6 := tsnetServer.TailscaleIPs()
+
+	var servers []*dns.Server
+	for _, ip := range []netip.Addr{ip4, ip6} {
+		addr := net.JoinHostPort(ip.String(), "53")
+		packetConn, err := tsnetServer.ListenPacket("udp", addr)
+		if err != nil {
+			return nil, err
+		}
+		udpSrv := dns.Server{
+			Handler:    handler,
+			PacketConn: packetConn,
+		}
+		go func() {
+			err := udpSrv.ActivateAndServe()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
+		servers = append(servers, &udpSrv)
+
+		listener, err := tsnetServer.Listen("tcp", addr)
+		if err != nil {
+			return nil, err
+		}
+		tcpSrv := dns.Server{
+			Handler:  handler,
+			Listener: listener,
+		}
+		go func() {
+			err := tcpSrv.ActivateAndServe()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
+		servers = append(servers, &tcpSrv)
 	}
 
-	go func() {
-		err := srv.ListenAndServe()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	return &srv
+	return servers, nil
 }
 
-func listenAndServeAll(cfg *config.Config) ([]*dns.Server, error) {
-	var servers []*dns.Server
-
+func listenAndServeAll(cfg *config.Config, ntsnet *ntsnet.Ntsnet) ([]*dns.Server, error) {
 	handler := Handler{
-		baseDomainFqdn: cfg.BaseDomain,
+		ntsnet: ntsnet,
 	}
 
 	var err error
@@ -163,20 +195,20 @@ func listenAndServeAll(cfg *config.Config) ([]*dns.Server, error) {
 	}
 	handler.dnsConfig.Servers = append(handler.dnsConfig.Servers, cfg.BaseForwardFallback...)
 
-	addr := net.JoinHostPort(cfg.Host, fmt.Sprint(cfg.Port))
-	srv := listenAndServeTransport(addr, "tcp", &handler)
-	servers = append(servers, srv)
-	srv = listenAndServeTransport(addr, "udp", &handler)
-	servers = append(servers, srv)
+	servers, err := Serve(ntsnet.TsnetServer, &handler)
+	if err != nil {
+		return servers, nil
+	}
+
 	return servers, nil
 }
 
-func Run(cfg *config.Config) error {
-	servers, err := listenAndServeAll(cfg)
+func Run(cfg *config.Config, ntsnet *ntsnet.Ntsnet) error {
+	servers, err := listenAndServeAll(cfg, ntsnet)
 	if err != nil {
-		return fmt.Errorf("Listening on all transport: %s", err)
+		return fmt.Errorf("Listening on tailnet: %s", err)
 	}
-	slog.Info("Server listening for requests", "host", cfg.Host, "port", cfg.Port)
+	slog.Info("Starting namescale")
 
 	serverCtx, serverCtxCancel := context.WithCancel(context.Background())
 	sig := make(chan os.Signal, 1)
@@ -197,6 +229,11 @@ func Run(cfg *config.Config) error {
 			if err != nil {
 				log.Fatalln(err)
 			}
+		}
+
+		err := ntsnet.TsnetServer.Close()
+		if err != nil {
+			log.Fatalln(err)
 		}
 
 		shutdownCtxCancel()

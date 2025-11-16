@@ -3,17 +3,23 @@ package config
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"log/slog"
+	"math"
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/miekg/dns"
 )
 
+type Tsnet struct {
+	Port                  uint16 `toml:"port"`
+	Hostname              string `toml:"hostname"`
+	AuthKey               string `toml:"auth_key"`
+	CoordinationServerURL string `toml:"coordination_server_url"`
+}
+
 type Config struct {
-	Host                string   `toml:"host"`
-	Port                uint     `toml:"port"`
-	BaseDomain          string   `toml:"base_domain"`
+	Tsnet               Tsnet    `toml:"tsnet"`
 	BaseForwardFallback []string `toml:"base_forward_fallback"`
 }
 
@@ -27,9 +33,9 @@ func New() (*Config, error) {
 	}
 
 	config := Config{
-		Host:                "::",
-		Port:                53,
-		BaseDomain:          "ts.net.",
+		Tsnet: Tsnet{
+			Hostname: "namescale",
+		},
 		BaseForwardFallback: []string{"1.1.1.1", "8.8.8.8"},
 	}
 
@@ -50,17 +56,31 @@ func New() (*Config, error) {
 		}
 	}
 
-	flag.StringVar(&config.Host, "host", config.Host, "Bind host")
-	flag.UintVar(&config.Port, "port", config.Port, "Bind port")
 	flag.StringVar(
-		&config.BaseDomain,
-		"base-domain",
-		config.BaseDomain,
-		"Base domain (dns.base_domain in headscale)",
+		&config.Tsnet.CoordinationServerURL,
+		"tsnet-coordination-server-url",
+		config.Tsnet.CoordinationServerURL,
+		"Bind host",
+	)
+	flag.StringVar(
+		&config.Tsnet.AuthKey,
+		"tsnet-auth-key",
+		config.Tsnet.AuthKey,
+		"Bind host",
+	)
+	var u uint
+	flag.UintVar(
+		&u,
+		"tsnet-port",
+		uint(config.Tsnet.Port),
+		"Bind host",
 	)
 	flag.Parse()
 
-	config.BaseDomain = dns.Fqdn(config.BaseDomain)
+	if u > math.MaxUint16 {
+		return nil, fmt.Errorf("Tailnet port too big for uint16: %v", u)
+	}
+	config.Tsnet.Port = uint16(u)
 
 	return &config, nil
 }

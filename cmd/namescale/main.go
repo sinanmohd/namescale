@@ -5,13 +5,19 @@ import (
 
 	"sinanmohd.com/namescale/internal/config"
 	"sinanmohd.com/namescale/internal/dns"
+	"sinanmohd.com/namescale/internal/ntsnet"
 )
 
 func main() {
-	config, err := config.New()
+	cfg, err := config.New()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	dns.Run(config)
+	net, err := ntsnet.New(cfg.Tsnet)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	dns.Run(cfg, net)
 }

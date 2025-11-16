@@ -48,8 +48,8 @@ in
 
       serviceConfig = {
         DynamicUser = true;
-        AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
-        CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
+        AmbientCapabilities = [ "" ];
+        CapabilityBoundingSet = [ "" ];
 
         Type = "simple";
         Restart = "on-failure";

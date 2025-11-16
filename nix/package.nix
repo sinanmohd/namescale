@@ -18,7 +18,7 @@ buildGoModule (finalAttrs: {
     src = ../.;
   };
 
-  vendorHash = "sha256-7rj6UAQIxH1ckS1qLmI6YkeYMW93zhmxE1aaUnxQbgs=";
+  vendorHash = "sha256-Tq9wN+9gDVPMZdZfF2zIqgkmUFIaSHDg+HsqSZQkpu8=";
 
   meta = {
     platforms = lib.platforms.unix;
