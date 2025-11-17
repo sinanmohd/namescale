@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	TTL              = 512
 	RESOLVECONF_PATH = "/etc/resolv.conf"
 	HEADSCALE_NS     = "100.100.100.100"
 )
@@ -43,7 +44,8 @@ func hostFqdnFromWildQustion(name, baseFqdn string) (string, error) {
 	return fmt.Sprintf("%s.%s", ss[len(ss)-2], baseFqdn), nil
 }
 
-func (handler *Handler) ServeFromRootNS(client *dns.Client, w dns.ResponseWriter, req *dns.Msg) {
+func (handler *Handler) ServeFromRootNS(w dns.ResponseWriter, req *dns.Msg) {
+	client := new(dns.Client)
 	var resp *dns.Msg
 	var err error
 
@@ -78,13 +80,18 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 		return
 	}
 
-	client := new(dns.Client)
-	var qustionNames []string
 	for i := range req.Question {
 		// pass the base domain to root ns
 		if req.Question[i].Name == baseDomain {
-			handler.ServeFromRootNS(client, w, req)
+			handler.ServeFromRootNS(w, req)
 			return
+		}
+
+		header := dns.RR_Header{
+			Name:   req.Question[i].Name,
+			Rrtype: req.Question[i].Qtype,
+			Class:  req.Question[i].Qclass,
+			Ttl:    TTL,
 		}
 
 		// handle the rest (wild card)
@@ -95,47 +102,36 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 			return
 		}
 
-		// either MagicDNS is disabled, or non-existent host
-		if req.Question[i].Name == hostFqdn {
+		ip, found, err := handler.ntsnet.MagicDNSResolve(context.Background(), hostFqdn, req.Question[i].Qtype)
+		if err != nil {
+			slog.Error("MagicDNS resolve", "err", err)
+			w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
+			return
+		}
+		if !found {
 			w.WriteMsg(req.SetRcode(req, dns.RcodeNameError))
 			return
 		}
 
-		qustionNames = append(qustionNames, req.Question[i].Name)
-		req.Question[i].Name = hostFqdn
+		switch req.Question[i].Qtype {
+		case dns.TypeA:
+			req.Answer = append(req.Answer, &dns.A{
+				Hdr: header,
+				A:   ip.AsSlice(),
+			})
+		case dns.TypeAAAA:
+			req.Answer = append(req.Answer, &dns.AAAA{
+				Hdr:  header,
+				AAAA: ip.AsSlice(),
+			})
+		default:
+			slog.Error("Unexpected qType", "qType", req.Question[i].Qtype)
+			w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
+			return
+		}
 	}
 
-	resp, _, err := client.Exchange(req, net.JoinHostPort(HEADSCALE_NS, handler.dnsConfig.Port))
-	if err != nil {
-		slog.Error("Headscale NS resolving", "err", err)
-		w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
-	}
-
-	qustionLen := len(qustionNames)
-	respQustionLen := len(resp.Question)
-	answerLen := len(resp.Answer)
-	if qustionLen != respQustionLen || qustionLen != answerLen {
-		slog.Error(
-			"Unexpected dns msg length",
-			"qustionLen",
-			qustionLen,
-			"answerLen",
-			answerLen,
-			"respQustionLen",
-			respQustionLen,
-		)
-		w.WriteMsg(req.SetRcode(req, dns.RcodeServerFailure))
-		return
-	}
-	for i := range resp.Question {
-		resp.Question[i].Name = qustionNames[i]
-	}
-	for i := range resp.Answer {
-		header := resp.Answer[i].Header()
-		header.Name = qustionNames[i]
-	}
-
-	w.WriteMsg(resp)
+	w.WriteMsg(req)
 }
 
 func Serve(tsnetServer *tsnet.Server, handler *Handler) ([]*dns.Server, error) {
