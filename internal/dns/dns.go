@@ -87,13 +87,6 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 			return
 		}
 
-		header := dns.RR_Header{
-			Name:   req.Question[i].Name,
-			Rrtype: req.Question[i].Qtype,
-			Class:  req.Question[i].Qclass,
-			Ttl:    ttl,
-		}
-
 		// handle the rest (wild card)
 		hostFqdn, err := hostFqdnFromWildQustion(req.Question[i].Name, baseDomain)
 		if err != nil {
@@ -113,6 +106,12 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 			return
 		}
 
+		header := dns.RR_Header{
+			Name:   req.Question[i].Name,
+			Rrtype: req.Question[i].Qtype,
+			Class:  req.Question[i].Qclass,
+			Ttl:    ttl,
+		}
 		switch req.Question[i].Qtype {
 		case dns.TypeA:
 			req.Answer = append(req.Answer, &dns.A{
