@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	TTL              = 512
-	RESOLVECONF_PATH = "/etc/resolv.conf"
-	HEADSCALE_NS     = "100.100.100.100"
+	ttl             = 512
+	resolveconfPath = "/etc/resolv.conf"
+	headscaleNs     = "100.100.100.100"
 )
 
 type Handler struct {
@@ -50,7 +50,7 @@ func (handler *Handler) ServeFromRootNS(w dns.ResponseWriter, req *dns.Msg) {
 	var err error
 
 	for _, upstream := range handler.dnsConfig.Servers {
-		if upstream == HEADSCALE_NS {
+		if upstream == headscaleNs {
 			continue
 		}
 
@@ -91,7 +91,7 @@ func (handler *Handler) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 			Name:   req.Question[i].Name,
 			Rrtype: req.Question[i].Qtype,
 			Class:  req.Question[i].Qclass,
-			Ttl:    TTL,
+			Ttl:    ttl,
 		}
 
 		// handle the rest (wild card)
@@ -182,7 +182,7 @@ func listenAndServeAll(cfg *config.Config, ntsnet *ntsnet.Ntsnet) ([]*dns.Server
 	}
 
 	var err error
-	handler.dnsConfig, err = dns.ClientConfigFromFile(RESOLVECONF_PATH)
+	handler.dnsConfig, err = dns.ClientConfigFromFile(resolveconfPath)
 	if err != nil {
 		slog.Error("Reading resolveconf, using fallback", "err", err)
 		handler.dnsConfig = &dns.ClientConfig{
