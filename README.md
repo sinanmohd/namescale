@@ -63,10 +63,11 @@ address assigned to your node running namescale.
 { ... }: {
     services.namescale = {
         enable = true;
-        settings = {
-            host = "100.64.0.6";
-            port = 53;
-            base_domain = "bane.ts.net";
+        settings.tsnet. = {
+            coordination_server_url = "https://headscale.example.com";
+            # services.namescale.environmentFile with TS_AUTHKEY is
+            # recommended for production
+            auth_key = "<your tailnet auth key>";
         };
     };
 }
@@ -99,7 +100,9 @@ Run Namescale, here host is the tailnet ip address assigned to your node
 running namescale
 
 ```sh
-sudo ./namescale -host "100.64.0.6" -base-domain "bane.ts.net"
+./namescale \
+    -auth-key="<your tailnet auth key>" \
+    -coordination-server=https://headscale.example.com
 ```
 
 Using Split DNS make your tailnet to routes all DNS requests to your base domain
@@ -117,20 +120,21 @@ dns:
 
 ### Kubernets & Docker
 
-> [!NOTE]
-> I don't use Tailnet on K8S or Docker, but it should be moderately okay to
-> set up namescale using Docker Compose or Helm Charts following the
-> [GNU/Linux Distros](#gnulinux-distros) section and
-> [Tailscale Containers and virtualization](https://tailscale.com/kb/1358/containers-and-virtualization)
-> documentation. if you do, please open a pr to update the readme. you can get
-> the image from `docker.io/sinanmohd/namescale`
+Run the container image
 
-Build and run the container image
+```sh
+docker run sinanmohd/namescale:latest \
+    namescale \
+    -auth-key="<your tailnet auth key>" \
+    -coordination-server=https://headscale.example.com
+```
+
+Build container image
 
 ```sh
 nix build .#container
 docker image load < result
-docker run sinanmohd/namescale:git
+docker tag sinanmohd/namescale:git sinanmohd/namescale:latest
 ```
 
 ## Development

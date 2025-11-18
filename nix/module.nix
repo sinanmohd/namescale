@@ -35,6 +35,14 @@ in
         Configuration options for namescale.
       '';
     };
+    environmentFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.path;
+      example = "/var/lib/alina/secrets";
+      default = null;
+      description = ''
+        Secrets may be passed to the service without adding them to the world-readable Nix store using this option.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -53,6 +61,7 @@ in
 
         Type = "simple";
         Restart = "on-failure";
+        EnvironmentFile = lib.mkIf (cfg.environmentFile != null) cfg.environmentFile;
         ExecStart = lib.getExe cfg.package;
       };
     };
