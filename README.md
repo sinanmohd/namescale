@@ -123,7 +123,9 @@ dns:
 Run the container image
 
 ```sh
-docker run sinanmohd/namescale:latest \
+docker run \
+    -v namescale:/.config/ \
+    sinanmohd/namescale:latest \
     namescale \
     -auth-key="<your tailnet auth key>" \
     -coordination-server=https://headscale.example.com
