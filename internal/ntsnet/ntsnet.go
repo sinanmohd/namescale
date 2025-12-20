@@ -27,6 +27,7 @@ func New(cfg config.Tsnet) (*Ntsnet, error) {
 	srv.AuthKey = cfg.AuthKey
 	srv.ControlURL = cfg.CoordinationServerURL
 	srv.AdvertiseTags = []string{"namescale"}
+	srv.Ephemeral = cfg.Ephemeral
 	namescaleTsnet.TsnetServer = srv
 
 	localClient, err := srv.LocalClient()

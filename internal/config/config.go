@@ -16,6 +16,7 @@ type Tsnet struct {
 	Hostname              string `toml:"hostname"`
 	AuthKey               string `toml:"auth_key"`
 	CoordinationServerURL string `toml:"coordination_server_url"`
+	Ephemeral             bool   `toml:"ephemeral"`
 }
 
 type Config struct {
@@ -34,7 +35,8 @@ func New() (*Config, error) {
 
 	config := Config{
 		Tsnet: Tsnet{
-			Hostname: "namescale",
+			Hostname:  "namescale",
+			Ephemeral: true,
 		},
 		BaseForwardFallback: []string{"1.1.1.1", "8.8.8.8"},
 	}
