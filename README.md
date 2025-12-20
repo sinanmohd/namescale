@@ -56,8 +56,7 @@ Namescale automatically registers Wildcard DNS names for devices in your Tailnet
 
 </details>
 
-Set up namescale in your `configuration.nix`, here host is the tailnet ip
-address assigned to your node running namescale.
+Set up namescale in your `configuration.nix`
 
 ```nix
 { ... }: {
@@ -67,7 +66,7 @@ address assigned to your node running namescale.
             coordination_server_url = "https://headscale.example.com";
             # services.namescale.environmentFile with TS_AUTHKEY is
             # recommended for production
-            auth_key = "<your tailnet auth key>";
+            auth_key = "<your tailnet pre auth key>";
         };
     };
 }
@@ -96,12 +95,11 @@ cd namescale
 go build ./cmd/namescale
 ```
 
-Run Namescale, here host is the tailnet ip address assigned to your node
-running namescale
+Run Namescale
 
 ```sh
 ./namescale \
-    -auth-key="<your tailnet auth key>" \
+    -auth-key="<your tailnet pre auth key>" \
     -coordination-server=https://headscale.example.com
 ```
 
