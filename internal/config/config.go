@@ -35,8 +35,7 @@ func New() (*Config, error) {
 
 	config := Config{
 		Tsnet: Tsnet{
-			Hostname:  "namescale",
-			Ephemeral: true,
+			Hostname: "namescale",
 		},
 		BaseForwardFallback: []string{"1.1.1.1", "8.8.8.8"},
 	}
