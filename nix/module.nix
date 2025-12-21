@@ -15,6 +15,7 @@ let
 
   defaultEnvs = {
     NAMESCALE_CONFIG = "${configFile}";
+    HOME = "%S/namescale";
   };
 in
 {
@@ -58,6 +59,7 @@ in
         DynamicUser = true;
         AmbientCapabilities = [ "" ];
         CapabilityBoundingSet = [ "" ];
+        StateDirectory = "namescale";
 
         Type = "simple";
         Restart = "on-failure";
