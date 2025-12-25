@@ -21,7 +21,7 @@ Namescale automatically registers Wildcard DNS names for devices in your Tailnet
 ### NixOS
 
 > [!TIP]
-> [Example setup](https://github.com/sinanmohd/nixos/commit/246840e19b230f4cd22b5f40ecf94cc28255b887) on NixOS with ACLs
+> [Example setup](https://github.com/sinanmohd/nixos/blob/7c4f625736d6f0ff4913b07a39c76461bfcb927e/os/kay/modules/network/headscale.nix#L192) on NixOS with ACLs
 
 <details>
 
